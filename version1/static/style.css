@@ -1,33 +1,185 @@
-* {
-  box-sizing: border-box;
-}
-
-html {
-  background: #f5f7fb;
-  color: #172b4d;
+:root {
+  color-scheme: light;
   font-family: "Segoe UI", Arial, sans-serif;
+  color: #20334e;
+  background: #fff;
+  --blue: #4561e8;
+  --mint: #99dfd5;
 }
 
-body {
-  margin: 0;
+* { box-sizing: border-box; }
+body { margin: 0; }
+button, input { font: inherit; }
+button { cursor: pointer; }
+button, input { -webkit-tap-highlight-color: transparent; }
+button:focus-visible { outline: 3px solid #74c9bf; outline-offset: 5px; }
+
+.sign-in-page {
+  display: grid;
+  grid-template-columns: 42.5% 57.5%;
   min-height: 100vh;
   min-height: 100svh;
+  overflow: hidden;
+}
+
+/* Bal oldali bemutatkozo resz. A korok csak diszitesek. */
+.hero {
+  position: relative;
+  z-index: 1;
+  border-top: 6px solid #4b9b92;
+  padding: clamp(40px, 3.65vw, 70px) clamp(32px, 4.17vw, 80px);
+  background: #192b43;
+  color: #fff;
+}
+
+.hero::before, .hero::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.hero::before {
+  width: 560px;
+  height: 560px;
+  left: -245px;
+  bottom: -230px;
+  background: #203b50;
+}
+.hero::after {
+  width: clamp(280px, 20.3vw, 390px);
+  height: clamp(280px, 20.3vw, 390px);
+  top: -65px;
+  right: -110px;
+  background: #243e5c;
+}
+
+.hero-content { position: relative; z-index: 1; }
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 20px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #fff;
+  font-size: clamp(23px, 1.67vw, 32px);
+  font-weight: 700;
+  text-align: left;
+}
+.brand-mark {
   display: grid;
   place-items: center;
-  padding: 32px 24px;
+  flex-shrink: 0;
+  width: clamp(48px, 3.33vw, 64px);
+  height: clamp(48px, 3.33vw, 64px);
+  border-radius: 20px;
+  background: var(--blue);
+  font-size: clamp(34px, 2.3vw, 44px);
+  line-height: 1;
+}
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 390px;
+  margin: clamp(52px, 3.75vw, 72px) 0 32px;
+  padding: 11px 15px;
+  border-radius: 30px;
+  background: #2e4b60;
+  color: var(--mint);
+  font-size: clamp(12px, .94vw, 18px);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.eyebrow span { width: 9px; height: 9px; border-radius: 50%; background: currentColor; }
+h1 { margin: 0; font-size: clamp(40px, 3.125vw, 60px); line-height: 1.24; letter-spacing: -.025em; }
+h1 span { color: var(--mint); }
+.hero-description {
+  margin: 24px 0 0;
+  color: #b9ccd8;
+  font-size: clamp(18px, 1.25vw, 24px);
+  line-height: 1.65;
 }
 
-main {
+/* Jobb oldali belepesi felulet. */
+.sign-in {
+  display: flex;
+  align-items: center;
+  padding: 64px clamp(48px, 11.875vw, 228px) 64px clamp(48px, 7.81vw, 150px);
+}
+.sign-in-content { position: relative; width: 100%; max-width: 728px; }
+h2 { margin: 0; padding-left: 12px; color: #3c958c; font-size: clamp(14px, .94vw, 18px); font-weight: 700; text-transform: uppercase; }
+.sign-in-description { margin: 32px 0 clamp(44px, 3.54vw, 68px); color: #6d809c; font-size: clamp(18px, 1.25vw, 24px); line-height: 1.45; }
+.field + .field { margin-top: clamp(24px, 2.08vw, 40px); }
+label { display: block; margin-bottom: 14px; font-size: clamp(15px, 1.04vw, 20px); font-weight: 650; }
+.input-wrap { position: relative; }
+.input-wrap svg { position: absolute; top: 50%; left: 27px; width: 25px; height: 25px; color: #72839b; transform: translateY(-50%); pointer-events: none; }
+input {
   width: 100%;
-  max-width: 800px;
-  text-align: center;
+  height: clamp(58px, 4.27vw, 82px);
+  border: 1px solid #dbe4f1;
+  border-radius: 16px;
+  padding: 0 22px 0 72px;
+  outline: none;
+  background: #f7f9fd;
+  color: #20334e;
+  font-size: clamp(16px, 1.15vw, 22px);
+  transition: border-color .15s, box-shadow .15s;
+}
+input::placeholder { color: #96a6bf; opacity: 1; }
+input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px #4561e81a; }
+.sign-in-button {
+  position: relative;
+  width: 100%;
+  min-height: clamp(58px, 3.75vw, 72px);
+  margin-top: clamp(28px, 2.4vw, 46px);
+  border: 0;
+  border-radius: 16px;
+  padding: 16px 60px;
+  background: var(--blue);
+  color: #fff;
+  font-size: clamp(17px, 1.15vw, 22px);
+  font-weight: 700;
+  transition: background .15s, transform .15s;
+}
+.sign-in-button svg { position: absolute; right: 28px; top: 50%; width: 27px; height: 27px; transform: translateY(-50%); }
+.sign-in-button:hover { background: #3652d7; }
+.sign-in-button:active { transform: translateY(1px); }
+.create-account { display: block; margin: clamp(28px, 2.29vw, 44px) auto 0; border: 0; border-radius: 5px; padding: 4px 8px; background: transparent; color: var(--blue); font-size: clamp(17px, 1.15vw, 22px); font-weight: 650; }
+.create-account:hover { color: #304dcc; text-decoration: underline; text-underline-offset: 4px; }
+.preview-message { position: absolute; right: 0; bottom: 14px; left: 0; margin: 0; border: 1px solid #dbe4f1; border-radius: 12px; padding: 10px; background: #f1f5ff; color: #3452cf; text-align: center; font-weight: 600; line-height: 22px; }
+.divider { height: 1px; margin: 74px 0 0; border: 0; background: #dfe6f1; }
+
+/* Kisebb kepernyon is elfer a ket oszlop. */
+@media (max-width: 1100px) {
+  .hero { padding-right: 26px; }
+  .hero::after { width: 280px; height: 280px; right: -70px; }
+  .brand { gap: 12px; font-size: 22px; }
+  h1 { font-size: 38px; }
+  .hero-description { font-size: 17px; }
+  .desktop-break { display: none; }
+  .sign-in { padding: 52px 42px 52px 56px; }
 }
 
-h1 {
-  margin: 0;
-  font-size: clamp(2rem, 5vw, 3.5rem);
-  font-weight: 600;
-  line-height: 1.2;
-  letter-spacing: -0.035em;
-  text-wrap: balance;
+/* Mobilon a bemutatkozas es az urlap egymas ala kerul. */
+@media (max-width: 760px) {
+  .sign-in-page { grid-template-columns: 1fr; }
+  .hero { padding: 28px 28px 36px; overflow: hidden; }
+  .hero::after { top: -140px; right: -110px; }
+  .hero::before { display: none; }
+  .brand { font-size: 24px; }
+  .brand-mark { width: 48px; height: 48px; border-radius: 15px; }
+  .eyebrow { width: fit-content; margin: 32px 0 20px; padding: 9px 13px; }
+  h1 { font-size: clamp(36px, 7vw, 46px); }
+  .hero-description { max-width: 340px; margin-top: 16px; font-size: 17px; line-height: 1.5; }
+  .sign-in { justify-content: center; padding: 42px 28px; }
+  .sign-in-content { max-width: 480px; }
+  h2 { padding-left: 0; }
+  .sign-in-description { margin: 18px 0 32px; }
+  .input-wrap svg { left: 20px; width: 23px; height: 23px; }
+  input { padding-left: 58px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  input, .sign-in-button { transition: none; }
 }

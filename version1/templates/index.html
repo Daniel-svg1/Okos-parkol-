@@ -4,13 +4,54 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Smart Parking</title>
-    <meta name="description" content="We are currently working on this">
+    <meta name="description" content="Smart Parking — find and reserve your parking space.">
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
   </head>
   <body>
-    <main>
-      <h1>We are currently working on this</h1>
+    <main class="sign-in-page">
+      <section class="hero" aria-label="About Smart Parking">
+        <div class="hero-content">
+          <button class="brand" type="button" data-preview aria-label="Smart Parking home">
+            <span class="brand-mark" aria-hidden="true">P</span>
+            <span>Smart Parking</span>
+          </button>
+          <p class="eyebrow"><span aria-hidden="true"></span> Smarter city parking</p>
+          <h1>Less searching.<br><span>More free time.</span></h1>
+          <p class="hero-description">Find and reserve your parking space<br class="desktop-break"> in one clear, simple interface.</p>
+        </div>
+      </section>
+
+      <section class="sign-in" aria-labelledby="welcome-title">
+        <div class="sign-in-content">
+          <h2 id="welcome-title">Welcome back!</h2>
+          <p class="sign-in-description">Sign in to plan your parking.</p>
+          <form id="sign-in-form" novalidate>
+            <div class="field">
+              <label for="email">Email address</label>
+              <div class="input-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="1"></rect><path d="m3 6 9 7 9-7"></path></svg>
+                <input id="email" type="email" placeholder="example@email.com" autocomplete="off" spellcheck="false" autocapitalize="none">
+              </div>
+            </div>
+            <div class="field">
+              <label for="password">Password</label>
+              <div class="input-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3"></path><path d="M5 10h14v11H5z"></path></svg>
+                <input id="password" type="password" placeholder="Enter your password" autocomplete="off">
+              </div>
+            </div>
+            <button class="sign-in-button" type="submit">
+              <span>Sign in</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"></path></svg>
+            </button>
+          </form>
+          <button class="create-account" type="button" data-preview>Create account</button>
+          <p class="preview-message" id="preview-message" role="status" aria-live="polite" hidden></p>
+          <hr class="divider">
+        </div>
+      </section>
     </main>
   </body>
 </html>
