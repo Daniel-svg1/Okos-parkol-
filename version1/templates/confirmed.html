@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Email confirmation — Smart Parking</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='confirmed.js') }}" defer></script>
+  </head>
+  <body class="inside-page">
+    <main class="inside-card">
+      <h1>Sign in to continue</h1>
+      <a class="create-account" href="{{ url_for('index') }}">Go to sign in</a>
+    </main>
+  </body>
+</html>

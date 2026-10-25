@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Please try again — Smart Parking</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  </head>
+  <body class="inside-page">
+    <main class="inside-card">
+      <h1>Please try again</h1>
+      <p>We could not check your session. Please try again shortly.</p>
+      <a class="create-account" href="{{ url_for('inside') }}">Try again</a>
+    </main>
+  </body>
+</html>

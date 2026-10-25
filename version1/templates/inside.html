@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>You are in — Smart Parking</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  </head>
+  <body class="inside-page">
+    <main class="inside-card">
+      <span class="brand-mark" aria-hidden="true">P</span>
+      <h1>You are in</h1>
+      <form action="{{ url_for('logout') }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button class="sign-in-button" type="submit">Sign out</button>
+      </form>
+    </main>
+  </body>
+</html>
