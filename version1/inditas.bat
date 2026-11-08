@@ -3,6 +3,7 @@ setlocal
 cd /d "%~dp0"
 set "parking_start_page=http://127.0.0.1:5000"
 if /i "%~1"=="preview" set "parking_start_page=http://127.0.0.1:5000/preview"
+if /i "%~1"=="admin" set "parking_start_page=http://127.0.0.1:5000/admin"
 if not exist ".env" goto missing_config
 
 if exist ".venv\Scripts\python.exe" goto check_flask

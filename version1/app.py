@@ -2,14 +2,20 @@ import hmac
 import os
 import re
 import secrets
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+import sqlite3
 
 import httpx
 from dotenv import load_dotenv
-from flask import Flask, abort, flash, redirect, render_template, request, session, url_for
+from flask import Flask, abort, flash, jsonify, redirect, render_template, request, session, url_for
+from postgrest.exceptions import APIError
 from supabase import ClientOptions, create_client
 from supabase_auth.errors import AuthApiError, AuthError, AuthRetryableError
+
+from parking_data import preview_spaces
+from admin_parking import admin, read_parking_map
+from bookings import create_booking_blueprint
 
 load_dotenv(Path(__file__).with_name(".env"))
 
@@ -24,7 +30,12 @@ app.config.update(
     SESSION_COOKIE_SECURE=os.getenv("COOKIE_SECURE", "false").lower() == "true",
     PERMANENT_SESSION_LIFETIME=timedelta(hours=8),
     MAX_CONTENT_LENGTH=16 * 1024,
+    PARKING_PREVIEW_DATABASE=Path(app.instance_path) / "parking_preview.sqlite3",
+    PARKING_ADMIN_SECRET=os.getenv("PARKING_ADMIN_SECRET", ""),
+    ADMIN_CODE=os.getenv("ADMIN_CODE", "1234"),
 )
+
+app.register_blueprint(admin)
 
 
 def supabase_client():
@@ -44,6 +55,28 @@ def save_login(auth_session):
     session.permanent = True
     session["access_token"] = auth_session.access_token
     session["refresh_token"] = auth_session.refresh_token
+
+
+def verified_user(client):
+    try:
+        user = client.auth.get_user(session["access_token"]).user
+    except AuthApiError as exc:
+        if exc.status != 401 and exc.code not in {"bad_jwt", "session_expired", "jwt_expired"}:
+            raise
+        refreshed = client.auth.refresh_session(session["refresh_token"])
+        if not refreshed.session:
+            raise AuthError("Session expired", None)
+        csrf_token = session.get("csrf_token")
+        save_login(refreshed.session)
+        if csrf_token:
+            session["csrf_token"] = csrf_token
+        user = client.auth.get_user(refreshed.session.access_token).user
+    if not user:
+        raise AuthError("No authenticated user", None)
+    return user
+
+
+app.register_blueprint(create_booking_blueprint(lambda: supabase_client(), verified_user))
 
 
 @app.context_processor
@@ -179,18 +212,7 @@ def inside():
         return redirect(url_for("index"))
     try:
         client = supabase_client()
-        try:
-            user = client.auth.get_user(session["access_token"]).user
-        except AuthApiError as exc:
-            if exc.status != 401 and exc.code not in {"bad_jwt", "session_expired", "jwt_expired"}:
-                raise
-            refreshed = client.auth.refresh_session(session["refresh_token"])
-            if not refreshed.session:
-                raise AuthError("Session expired", None)
-            save_login(refreshed.session)
-            user = client.auth.get_user(refreshed.session.access_token).user
-        if not user:
-            raise AuthError("No authenticated user", None)
+        verified_user(client)
     except (AuthRetryableError, httpx.HTTPError, RuntimeError):
         return render_template("unavailable.html"), 503
     except AuthError:
@@ -203,6 +225,42 @@ def inside():
 @app.get("/preview")
 def parking_preview():
     return render_template("inside.html", preview_mode=True)
+
+
+def parking_response(spaces, source):
+    return jsonify(spaces=spaces, source=source,
+                   fetched_at=datetime.now(timezone.utc).isoformat())
+
+
+@app.get("/api/parking-spaces")
+def parking_spaces_api():
+    if not session.get("access_token") or not session.get("refresh_token"):
+        return jsonify(error="Please sign in to load parking spaces.", code="auth_required"), 401
+    try:
+        client = supabase_client()
+        verified_user(client)
+        client.postgrest.auth(session["access_token"])
+        return parking_response(read_parking_map(client), "supabase")
+    except (AuthRetryableError, httpx.HTTPError, RuntimeError):
+        return jsonify(error="Parking data is temporarily unavailable. Please try again.", code="unavailable"), 503
+    except AuthError:
+        session.clear()
+        return jsonify(error="Your session expired. Please sign in again.", code="auth_required"), 401
+    except APIError as exc:
+        if exc.code in {"42P01", "PGRST205", "PGRST202"}:
+            return jsonify(error="Parking data is not available yet.", code="not_ready"), 503
+        return jsonify(error="Parking data could not be loaded. Please try again.", code="unavailable"), 503
+    except (ValueError, TypeError, KeyError):
+        return jsonify(error="Parking data could not be loaded. Please try again.", code="invalid_data"), 503
+
+
+@app.get("/api/preview/parking-spaces")
+def parking_spaces_preview_api():
+    try:
+        spaces = preview_spaces(app.config["PARKING_PREVIEW_DATABASE"])
+        return parking_response(spaces, "local_demo")
+    except (sqlite3.Error, OSError, ValueError, TypeError, KeyError):
+        return jsonify(error="Demo parking data could not be loaded. Please try again.", code="unavailable"), 503
 
 
 @app.post("/logout")
