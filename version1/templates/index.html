@@ -64,6 +64,7 @@
             {% endif %}
           </form>
           <a class="create-account" href="{{ url_for('index' if is_register else 'register') }}">{{ 'Already have an account? Sign in' if is_register else 'Create account' }}</a>
+          <a class="secondary-link preview-link" href="{{ url_for('parking_preview') }}">Preview parking map</a>
           {% if is_register %}<p class="form-note">We will email you a confirmation link.</p>{% endif %}
           <hr class="divider">
         </div>

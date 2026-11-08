@@ -7,6 +7,8 @@
   --mint: #99dfd5;
 }
 
+.preview-link { display: block; text-align: center; text-decoration: none; margin-top: 16px; }
+
 * { box-sizing: border-box; }
 body { margin: 0; }
 button, input { font: inherit; }
@@ -22,7 +24,6 @@ button:focus-visible, a:focus-visible { outline: 3px solid #74c9bf; outline-offs
   overflow: hidden;
 }
 
-/* Bal oldali bemutatkozo resz. A korok csak diszitesek. */
 .hero {
   position: relative;
   z-index: 1;
@@ -102,7 +103,6 @@ h1 span { color: var(--mint); }
   line-height: 1.65;
 }
 
-/* Jobb oldali belepesi felulet. */
 .sign-in {
   display: flex;
   align-items: center;
@@ -160,7 +160,6 @@ input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px #4561e81a; }
 .inside-card h1 { font-size: 44px; }
 .inside-card .sign-in-button { margin-top: 32px; }
 
-/* Kisebb kepernyon is elfer a ket oszlop. */
 @media (max-width: 1100px) {
   .hero { padding-right: 26px; }
   .hero::after { width: 280px; height: 280px; right: -70px; }
@@ -171,7 +170,6 @@ input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px #4561e81a; }
   .sign-in { padding: 52px 42px 52px 56px; }
 }
 
-/* Mobilon a bemutatkozas es az urlap egymas ala kerul. */
 @media (max-width: 760px) {
   .sign-in-page { grid-template-columns: 1fr; }
   .hero { padding: 28px 28px 36px; overflow: hidden; }

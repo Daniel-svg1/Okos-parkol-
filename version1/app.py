@@ -1,5 +1,3 @@
-"""Smart Parking: regisztracio es belepes Supabase Auth segitsegevel."""
-
 import hmac
 import os
 import re
@@ -30,7 +28,6 @@ app.config.update(
 
 
 def supabase_client():
-    """Minden keres sajat klienst kap: a felhasznalok munkamenete nem keveredik."""
     if not app.config["SUPABASE_URL"] or not app.config["SUPABASE_PUBLISHABLE_KEY"]:
         raise RuntimeError("Missing Supabase configuration")
     return create_client(
@@ -43,7 +40,6 @@ def supabase_client():
 
 
 def save_login(auth_session):
-    # Jelszot soha nem tarolunk. A sutit a Flask titkos kulcsa alairja.
     session.clear()
     session.permanent = True
     session["access_token"] = auth_session.access_token
@@ -59,7 +55,6 @@ def csrf_context():
 
 @app.before_request
 def check_csrf():
-    """Csak az oldalunkrol szarmazo urlapokat fogadjuk el."""
     if request.method == "POST":
         expected = session.get("csrf_token", "")
         supplied = request.form.get("csrf_token", "")
@@ -174,8 +169,6 @@ def resend_confirmation():
 
 @app.get("/auth/confirmed")
 def confirmed():
-    # Az emailes visszateres nem leptet be: uj, jelszavas belepes kell.
-    # A kis script torli a Supabase altal a URL # reszebe tett tokeneket.
     flash("Sign in with your confirmed email to continue. If the link expired, enter your email and click Resend confirmation email.")
     return render_template("confirmed.html")
 
@@ -205,6 +198,11 @@ def inside():
         flash("Your session expired. Please sign in again.")
         return redirect(url_for("index"))
     return render_template("inside.html")
+
+
+@app.get("/preview")
+def parking_preview():
+    return render_template("inside.html", preview_mode=True)
 
 
 @app.post("/logout")

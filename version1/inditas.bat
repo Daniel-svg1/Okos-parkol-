@@ -1,6 +1,8 @@
 @echo off
 setlocal
 cd /d "%~dp0"
+set "parking_start_page=http://127.0.0.1:5000"
+if /i "%~1"=="preview" set "parking_start_page=http://127.0.0.1:5000/preview"
 if not exist ".env" goto missing_config
 
 if exist ".venv\Scripts\python.exe" goto check_flask
@@ -39,7 +41,7 @@ if %parking_wait_count% geq 30 goto failed
 goto wait_server
 
 :open_browser
-start http://127.0.0.1:5000
+start "" "%parking_start_page%"
 
 pause >nul
 exit /b 0

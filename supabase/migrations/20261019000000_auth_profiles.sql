@@ -1,4 +1,3 @@
--- A jelszavakat a Supabase Auth kezeli, nem a sajat tablank.
 begin;
 
 create table if not exists public.users (

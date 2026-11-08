@@ -1,4 +1,3 @@
-"""A belepes fontos esetei, valo felhasznalok letrehozasa nelkul."""
 import unittest
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
@@ -33,6 +32,22 @@ class AuthTests(unittest.TestCase):
         self.assertEqual(result.status_code, 302)
         self.assertEqual(result.location, "/")
         self.client.auth.get_user.assert_not_called()
+
+    def test_preview_uses_only_sample_data_without_supabase(self):
+        result = self.browser.get("/preview")
+        self.assertEqual(result.status_code, 200)
+        self.assertIn(b"Sample data", result.data)
+        self.assertIn(b"Your account", result.data)
+        self.assertNotIn(b'action="/logout"', result.data)
+        self.client.assert_not_called()
+        self.assertEqual(self.client.mock_calls, [])
+        with self.browser.session_transaction() as current:
+            self.assertNotIn("access_token", current)
+        self.assertEqual(self.browser.get("/inside").location, "/")
+
+    def test_preview_does_not_accept_booking_posts(self):
+        self.assertEqual(self.form("/preview", space="A3").status_code, 405)
+        self.assertEqual(self.client.mock_calls, [])
 
     def test_csrf_required(self):
         result = self.browser.post("/", data={"email": "person@example.com", "password": "x"})
@@ -72,7 +87,9 @@ class AuthTests(unittest.TestCase):
         result = self.form(email="person@example.com", password="correct-password")
         self.assertEqual(result.location, "/inside")
         result = self.browser.get("/inside")
-        self.assertIn(b"You are in", result.data)
+        self.assertIn(b"Find your space.", result.data)
+        self.assertIn(b'action="/logout"', result.data)
+        self.assertNotIn(b"Demo user", result.data)
         self.assertEqual(result.headers["Cache-Control"], "no-store")
         self.client.auth.get_user.assert_called_once_with("access")
         with self.browser.session_transaction() as current:
@@ -84,7 +101,7 @@ class AuthTests(unittest.TestCase):
         self.client.auth.sign_in_with_password.side_effect = AuthApiError("Invalid credentials", 400, "invalid_credentials")
         result = self.form(email="person@example.com", password="wrong-password")
         self.assertEqual(result.status_code, 400)
-        self.assertNotIn(b"You are in", result.data)
+        self.assertNotIn(b"Find your space.", result.data)
         self.assertIn(b"Check your details", result.data)
 
     def test_login_without_session_does_not_grant_access(self):
@@ -107,7 +124,7 @@ class AuthTests(unittest.TestCase):
         self.client.auth.refresh_session.return_value = SimpleNamespace(
             session=SimpleNamespace(access_token="new-access", refresh_token="new-refresh")
         )
-        self.assertIn(b"You are in", self.browser.get("/inside").data)
+        self.assertIn(b"Find your space.", self.browser.get("/inside").data)
         self.client.auth.get_user.assert_called_with("new-access")
 
     def test_invalid_session_is_removed(self):
@@ -123,7 +140,7 @@ class AuthTests(unittest.TestCase):
         self.client.auth.get_user.side_effect = httpx.ConnectError("offline")
         result = self.browser.get("/inside")
         self.assertEqual(result.status_code, 503)
-        self.assertNotIn(b"You are in", result.data)
+        self.assertNotIn(b"Find your space.", result.data)
 
     def test_supabase_outage_keeps_session_for_retry(self):
         self.logged_in()
