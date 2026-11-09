@@ -2,3 +2,4 @@
 __pycache__/
 *.py[cod]
 .env
+version1/instance/

@@ -1,0 +1,36 @@
+{% extends "inside.html" %}
+{% block page_content %}
+<div class="page-heading user-heading"><div><h1>{{ 'Plan your parking.' if user_page == 'booking' else 'Your parking.' }}</h1><p>{{ 'Choose a space and a time for today.' if user_page == 'booking' else 'Manage your reservations and keep track of your parking.' }}</p></div><div class="user-heading-actions"><button class="refresh-button" id="user-refresh" type="button">{{ icon('refresh') }} Refresh</button>{% if user_page == 'active' %}<a class="new-booking-link" href="{{ url_for('bookings.booking_page') }}">New booking {{ icon('arrow') }}</a>{% endif %}</div></div>
+<p class="data-message" id="user-message" role="status"><span id="user-message-text">Loading your parking information…</span><a id="user-sign-in" href="{{ url_for('index') }}" hidden>Sign in</a></p>
+{% if user_page == 'booking' %}
+<a class="back-to-map" href="{{ url_for('inside') }}">← Back to parking map</a>
+<div class="booking-grid">
+  <section class="card booking-details" aria-labelledby="booking-details-title">
+    <div class="card-heading"><h2 id="booking-details-title">Booking details</h2><span class="small-badge">Today</span></div>
+    <form id="booking-form">
+      <p class="booking-day" id="booking-day">Today · Romanian time</p>
+      <label for="booking-space">Parking space</label>
+      <select id="booking-space" required disabled><option value="">Loading spaces…</option></select>
+      <p class="field-help" id="space-help">Choose a space to see availability.</p>
+      <div class="booking-times"><div><label for="booking-start">Start time</label><input id="booking-start" type="time" step="60" required disabled></div><div><label for="booking-end">End time</label><input id="booking-end" type="time" step="60" required disabled><span id="booking-midnight-value" class="booking-time-value" hidden>24:00</span></div></div>
+      <label class="booking-midnight-option"><input id="booking-midnight" type="checkbox" disabled> Until midnight (24:00)</label>
+      <p class="field-help">Bookings can start now or later today and must end by midnight.</p>
+      <div class="space-schedule" id="space-schedule" aria-live="polite"></div>
+    </form>
+  </section>
+  <aside class="card booking-summary" aria-labelledby="booking-summary-title" aria-live="polite">
+    <h2 class="overline" id="booking-summary-title">Booking summary</h2>
+    <div class="booking-space-summary"><span class="space-number" id="booking-label">—</span><div><span class="status-badge" id="booking-availability"><i></i><span>Choose a space</span></span><p>Selected parking space</p></div></div>
+    <div class="booking-summary-lines"><p><span>Date</span><strong id="summary-date">—</strong></p><p><span>Time</span><strong id="summary-time">—</strong></p><p><span>Hourly rate</span><strong id="summary-rate">—</strong></p><p><span>Duration</span><strong id="summary-duration">—</strong></p></div>
+    <div class="booking-total"><span>Estimated total</span><strong id="summary-total">—</strong></div>
+    <button class="primary-button" form="booking-form" id="confirm-booking" type="submit" disabled>Confirm booking {{ icon('arrow') }}</button>
+    <p class="muted-note">Your reservation will appear in Active parking.</p>
+  </aside>
+</div>
+{% else %}
+<div class="stats user-stats"><div class="stat-card"><span class="stat-icon available">{{ icon('car') }}</span><div><span>Active parking</span><strong id="user-active-count">—</strong></div></div><div class="stat-card"><span class="stat-icon reserved">{{ icon('calendar') }}</span><div><span>Upcoming bookings</span><strong id="user-upcoming-count">—</strong></div></div><div class="stat-card"><span class="stat-icon available">{{ icon('clock') }}</span><div><span>Ready to start</span><strong id="user-ready-count">—</strong></div></div></div>
+<section aria-labelledby="current-parking-title"><h2 class="user-section-title" id="current-parking-title">Active parking</h2><div id="current-parking" class="current-parking-grid" aria-live="polite"></div></section>
+<section aria-labelledby="upcoming-title"><h2 class="user-section-title" id="upcoming-title">Your reservations</h2><div id="user-reservations" class="user-reservations" aria-live="polite"></div></section>
+<section aria-labelledby="history-title"><h2 class="user-section-title" id="history-title">Recent activity</h2><div id="user-history" class="card user-history"></div></section>
+{% endif %}
+{% endblock %}

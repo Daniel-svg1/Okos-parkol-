@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin access — Smart Parking</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="{{ url_for('static', filename='parking.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
+  </head>
+  <body class="admin-login-page">
+    <main class="admin-login card">
+      <a class="admin-login-brand" href="{{ url_for('parking_preview') }}"><span class="brand-mark">P</span><span>Smart Parking</span></a>
+      <p class="overline">Admin dashboard</p>
+      <h1>Admin access</h1>
+      <p>Enter your admin code to manage the parking area.</p>
+      <form method="post" action="{{ url_for('admin.dashboard') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <label for="admin-code">Admin code</label>
+        <input id="admin-code" name="code" type="password" inputmode="numeric" autocomplete="off" maxlength="128" required autofocus>
+        {% if error %}<p class="admin-login-error" role="alert">{{ error }}</p>{% endif %}
+        <button class="primary-button" type="submit">Enter dashboard <span aria-hidden="true">→</span></button>
+      </form>
+      <a class="admin-back" href="{{ url_for('parking_preview') }}">← Back to parking map</a>
+    </main>
+  </body>
+</html>

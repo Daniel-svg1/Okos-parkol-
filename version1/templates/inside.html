@@ -8,6 +8,7 @@
   {% elif name == 'admin' %}<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
   {% elif name == 'bell' %}<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/>
   {% elif name == 'arrow' %}<path d="M4 12h16m-6-6 6 6-6 6"/>
+  {% elif name == 'refresh' %}<path d="M20 7v5h-5M4 17v-5h5M6 7a7 7 0 0 1 12-2l2 2M4 17l2 2a7 7 0 0 0 12-2"/>
   {% elif name == 'exit' %}<path d="M9 21H4V3h5M10 12h11m-4-4 4 4-4 4"/>
   {% elif name == 'info' %}<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/>
   {% elif name == 'close' %}<path d="m6 6 12 12M6 18 18 6"/>{% endif %}
@@ -18,27 +19,41 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Parking map — Smart Parking</title>
+    <title>{{ 'Booking' if user_page == 'booking' else 'Active parking' if user_page == 'active' else 'Admin dashboard' if admin_mode else 'Parking map' }} — Smart Parking</title>
     <meta name="description" content="Smart Parking map preview.">
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="{{ url_for('static', filename='parking.css') }}">
+    {% if user_page %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='user_pages.css') }}">
+    <script src="{{ url_for('static', filename='user_pages.js') }}" defer></script>
+    {% else %}
     <script src="{{ url_for('static', filename='parking.js') }}" defer></script>
+    {% endif %}
+    {% if admin_mode %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
+    <script src="{{ url_for('static', filename='admin.js') }}" defer></script>
+    {% endif %}
   </head>
-  <body>
+  <body {% if user_page %}data-user-page="{{ user_page }}" data-selected-space="{{ selected_space or '' }}" data-csrf="{{ csrf_token }}"{% else %}data-parking-url="{{ '/api/admin/parking-spaces' if admin_mode else '/api/preview/parking-spaces' if preview_mode else '/api/parking-spaces' }}" {% if admin_mode %}data-admin="true" data-csrf="{{ csrf_token }}"{% endif %}{% endif %}>
     <a class="skip-link" href="#main-content">Skip to content</a>
     <div class="app-layout">
       <aside class="sidebar" aria-label="Main navigation">
-        <a class="brand" href="#map"><span class="brand-mark">P</span><span>Smart<br> Parking</span></a>
+        <a class="brand" href="{{ url_for('parking_preview') if preview_mode else url_for('inside') }}"><span class="brand-mark">P</span><span>Smart<br> Parking</span></a>
         <p class="nav-label">Workspace</p>
         <nav class="navigation" aria-label="Workspace">
-          <a class="nav-item is-active" href="#map" aria-current="page">{{ icon('map') }}<span>Parking map</span></a>
-          <button class="nav-item" type="button" data-placeholder="Booking">{{ icon('calendar') }}<span>Booking</span></button>
-          <button class="nav-item" type="button" data-placeholder="Active parking">{{ icon('clock') }}<span>Active parking</span></button>
-          <button class="nav-item" type="button" data-placeholder="Admin dashboard">{{ icon('admin') }}<span>Admin dashboard</span></button>
+          <a class="nav-item {{ 'is-active' if not admin_mode and not user_page else '' }}" href="{{ url_for('inside') if admin_mode or user_page else '#map' }}" {% if not admin_mode and not user_page %}aria-current="page"{% endif %}>{{ icon('map') }}<span>Parking map</span></a>
+          <a class="nav-item {{ 'is-active' if user_page == 'booking' else '' }}" href="{{ url_for('bookings.booking_page') }}" {% if user_page == 'booking' %}aria-current="page"{% endif %}>{{ icon('calendar') }}<span>Booking</span></a>
+          <a class="nav-item {{ 'is-active' if user_page == 'active' else '' }}" href="{{ url_for('bookings.active_page') }}" {% if user_page == 'active' %}aria-current="page"{% endif %}>{{ icon('clock') }}<span>Active parking</span></a>
+          <a class="nav-item {{ 'is-active' if admin_mode else '' }}" href="{{ url_for('admin.dashboard') }}" {% if admin_mode %}aria-current="page"{% endif %}>{{ icon('admin') }}<span>Admin dashboard</span></a>
         </nav>
         <div class="sidebar-bottom">
           <div class="user-summary"><span class="avatar">SP</span><div><strong>Your account</strong></div></div>
-          {% if preview_mode %}
+          {% if admin_mode %}
+          <form action="{{ url_for('admin.sign_out') }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button class="sign-out" type="submit">{{ icon('exit') }} Lock admin</button>
+          </form>
+          {% elif preview_mode %}
           <a class="sign-out" href="{{ url_for('index') }}">{{ icon('exit') }} Back to sign in</a>
           {% else %}
           <form action="{{ url_for('logout') }}" method="post">
@@ -51,58 +66,69 @@
 
       <div class="workspace">
         <header class="topbar">
-          <div class="breadcrumb"><strong>Smart Parking</strong><span>/</span><span id="breadcrumb-page">Parking map</span></div>
-          <div class="topbar-actions"><span class="demo-badge"><i></i> Sample data</span><button class="icon-button" type="button" aria-label="Notifications" data-placeholder="Notifications">{{ icon('bell') }}</button><span class="avatar">SP</span></div>
+          <div class="breadcrumb"><strong>Smart Parking</strong><span>/</span><span id="breadcrumb-page">{{ 'Booking' if user_page == 'booking' else 'Active parking' if user_page == 'active' else 'Admin dashboard' if admin_mode else 'Parking map' }}</span></div>
+          <div class="topbar-actions"><span class="demo-badge" id="data-source" {% if preview_mode %}title="Sample data from a local database"{% endif %}><i></i><span>Loading data</span></span><button class="icon-button" type="button" aria-label="Notifications" data-placeholder="Notifications">{{ icon('bell') }}</button><span class="avatar">SP</span></div>
         </header>
 
         <main id="main-content" tabindex="-1">
+          {% block page_content %}
           <section id="map-page" aria-labelledby="map-title">
-            <div class="page-heading"><div><h1 id="map-title">Find your space.</h1><p>Choose an available space and plan ahead.</p></div><span class="page-caption">Parking overview</span></div>
+            <div class="page-heading"><div><h1 id="map-title">{{ 'Manage your parking.' if admin_mode else 'Find your space.' }}</h1><p>{{ 'Drag cars onto the map, move them between spaces, or remove them.' if admin_mode else 'Choose an available space and plan ahead.' }}</p></div><span class="page-caption">{{ 'Admin controls' if admin_mode else 'Parking overview' }}</span></div>
             <div class="dashboard-grid">
               <div class="map-column">
-                <div class="stats" aria-label="Sample parking availability">
-                  <div class="stat-card"><span class="stat-icon available">{{ icon('check') }}</span><div><span>Available spaces</span><strong>6</strong></div></div>
-                  <div class="stat-card"><span class="stat-icon occupied">{{ icon('car') }}</span><div><span>Occupied spaces</span><strong>4</strong></div></div>
-                  <div class="stat-card"><span class="stat-icon reserved">{{ icon('calendar') }}</span><div><span>Reserved spaces</span><strong>2</strong></div></div>
+                <div class="stats" aria-label="Parking availability">
+                  <div class="stat-card"><span class="stat-icon available">{{ icon('check') }}</span><div><span>Available spaces</span><strong id="available-count">—</strong></div></div>
+                  <div class="stat-card"><span class="stat-icon occupied">{{ icon('car') }}</span><div><span>Occupied spaces</span><strong id="occupied-count">—</strong></div></div>
+                  <div class="stat-card"><span class="stat-icon reserved">{{ icon('calendar') }}</span><div><span>Reserved spaces</span><strong id="reserved-count">—</strong></div></div>
                 </div>
 
+                {% if admin_mode %}
+                <div class="admin-drag-tools">
+                  <div class="car-source" id="car-source" draggable="true" role="button" tabindex="0" aria-label="Add car to selected space"><span class="tool-car" aria-hidden="true">🚗</span><div><strong>Add a car</strong><span>Drag to an available space</span></div></div>
+                  <div class="car-exit" id="car-exit" role="group" aria-label="Drop a car here to remove it"><span aria-hidden="true">↗</span><div><strong>Remove a car</strong><span>Drag a parked car here</span></div></div>
+                </div>
+                {% endif %}
+
                 <section class="card map-card" aria-labelledby="parking-map-title">
-                  <div class="card-heading"><h2 id="parking-map-title">Parking map</h2><span class="small-badge"><i></i>12 spaces</span></div>
-                  <div class="parking-lot" role="group" aria-label="Parking spaces. Select a space to see its details.">
-                    <div class="green-strip" aria-hidden="true"></div>
-                    {% for row in ['A', 'B'] %}
-                    <div class="parking-row">
-                      {% for number in range(1, 7) %}
-                      {% set space = row ~ number %}
-                      {% set state = 'occupied' if space in ['A2', 'A6', 'B2', 'B5'] else 'reserved' if space in ['A4', 'B3'] else 'available' %}
-                      <button class="parking-space {{ state }}{{ ' is-selected' if space == 'A3' else '' }}" type="button" data-space="{{ space }}" data-status="{{ state }}" aria-label="{{ space }}, {{ state }}" aria-pressed="{{ 'true' if space == 'A3' else 'false' }}">
-                        <span class="space-label">{{ space }}</span>
-                        {% if state == 'occupied' %}
-                        <span class="car-emoji" aria-hidden="true">🚗</span>
-                        {% else %}{{ icon('calendar' if state == 'reserved' else 'check') }}{% endif %}
-                      </button>
-                      {% endfor %}
-                    </div>
-                    {% if row == 'A' %}<div class="driveway" aria-hidden="true"><span>IN</span><span class="lane-line"></span>{{ icon('arrow') }}<span class="lane-line"></span><span>OUT</span></div>{% endif %}
-                    {% endfor %}
-                  </div>
-                  <div class="map-footer"><div class="legend"><span class="status-badge available"><i></i> Available</span><span class="status-badge occupied"><i></i> Occupied</span><span class="status-badge reserved"><i></i> Reserved</span></div><span class="selection-note"><span data-selected-space>A3</span> selected</span></div>
+                  <div class="card-heading"><h2 id="parking-map-title">Parking map</h2><div class="map-actions"><span class="small-badge" id="space-count">— spaces</span><button class="refresh-button" type="button" id="refresh-data">{{ icon('refresh') }} Refresh</button></div></div>
+                  <p class="data-message" id="parking-message" role="status"><span id="parking-message-text">Loading parking spaces…</span><a href="{{ url_for('admin.dashboard') if admin_mode else url_for('index') }}" id="parking-sign-in" hidden>{{ 'Enter admin code' if admin_mode else 'Sign in' }}</a></p>
+                  <div class="parking-lot" id="parking-lot" role="group" aria-label="Parking spaces. Select a space to see its details." aria-busy="true"></div>
+                  <div class="map-footer"><div class="legend"><span class="status-badge available"><i></i> Available</span><span class="status-badge occupied"><i></i> Occupied</span><span class="status-badge reserved"><i></i> Reserved</span></div><span class="selection-note" id="map-selection">No space selected</span></div>
                 </section>
               </div>
 
               <aside class="card selection-card" aria-labelledby="selection-title" aria-live="polite">
                 <h2 class="overline" id="selection-title">Selected parking space</h2>
-                <div class="selected-space"><span class="space-number" data-selected-space>A3</span><div><span id="selected-status" class="status-badge available"><i></i><span>Available</span></span><p id="selected-description">Available to book</p></div></div>
-                <div class="selection-details"><p>{{ icon('calendar') }}<strong data-display-date>Today</strong></p><p>{{ icon('clock') }}<strong data-display-time>10:00 – 12:00 · 2 hours</strong></p></div>
-                <div class="price-box"><span>Sample hourly rate</span><strong>5 RON <span>/ hour</span></strong></div>
-                <button class="primary-button" type="button" id="open-booking" data-placeholder="Booking">Booking {{ icon('arrow') }}</button>
-                <p class="muted-note" id="selection-note">Booking is coming soon.</p>
+                <div class="selected-space"><span class="space-number" id="selected-label">—</span><div><span id="selected-status" class="status-badge"><i></i><span>No selection</span></span><p id="selected-description">Select a parking space</p></div></div>
+                <div class="selection-details"><p>{{ icon('calendar') }}<strong data-display-date>Today</strong></p><p>{{ icon('clock') }}<strong id="last-refreshed">Not refreshed yet</strong></p></div>
+                <div class="price-box"><span>Hourly rate</span><strong><span id="selected-rate">—</span> RON <span>/ hour</span></strong></div>
+                {% if admin_mode %}
+                <div class="admin-controls">
+                  <button class="primary-button" id="admin-occupy" type="button" disabled><span aria-hidden="true">🚗</span> Add car</button>
+                  <div class="reservation-times">
+                    <p class="reservation-date" id="reservation-date">Today · Romanian time</p>
+                    <div><label for="reserve-start">Start time</label><input id="reserve-start" type="time" step="60" required></div>
+                    <div><label for="reserve-end">End time</label><input id="reserve-end" type="time" step="60" required><span class="midnight-value" id="midnight-value" hidden>24:00</span></div>
+                    <label class="midnight-option"><input id="reserve-midnight" type="checkbox"> Until midnight (24:00)</label>
+                    <p class="reservation-hint">Choose a time between now and midnight today.</p>
+                  </div>
+                  <button class="admin-reserve" id="admin-reserve" type="button" disabled>{{ icon('calendar') }} Reserve space</button>
+                  <button class="admin-free" id="admin-free" type="button" disabled>{{ icon('check') }} Make available</button>
+                  <p class="admin-reservation-time" id="reservation-until" hidden></p>
+                  <div class="reservation-list" id="reservation-list" aria-label="Reservations for the selected space"></div>
+                  <p class="admin-action-message" id="admin-message" role="status" hidden></p>
+                </div>
+                {% else %}
+                <button class="primary-button" type="button" id="open-booking" disabled>Booking {{ icon('arrow') }}</button>
+                {% endif %}
+                <p class="muted-note" id="selection-note">Choose a space to view its details.</p>
               </aside>
             </div>
           </section>
+          {% endblock %}
 
-          <footer class="page-footer"><span>Smart Parking · School project</span><span>Design preview · Sample data</span></footer>
-          <noscript><p class="preview-callout">Enable JavaScript to try the parking map preview.</p></noscript>
+          <footer class="page-footer"><span>Smart Parking · School project</span><span>{{ 'Admin changes are saved to Supabase' if admin_mode else 'Local database · Sample data' if preview_mode else 'Parking overview' }}</span></footer>
+          <noscript><p class="preview-callout">Enable JavaScript to use Smart Parking.</p></noscript>
         </main>
       </div>
     </div>
