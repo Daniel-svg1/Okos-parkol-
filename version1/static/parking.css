@@ -47,6 +47,16 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 i { display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
 .icon-button { display: grid; place-items: center; width: 34px; height: 34px; padding: 5px; border: 0; border-radius: 8px; background: transparent; color: #748194; }
 .icon-button:hover { background: #edf1f8; }
+.map-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.refresh-button { display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 6px 9px; border: 1px solid #dce4f1; border-radius: 8px; background: #fff; color: var(--blue); font-size: 11px; }
+.refresh-button .icon { width: 15px; height: 15px; }
+.refresh-button:hover { background: #f0f3ff; }
+.refresh-button:disabled { opacity: .55; cursor: wait; }
+.data-message { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; padding: 12px; border-radius: 9px; background: #f0f4fb; color: #63758e; font-size: 12px; line-height: 1.5; }
+.data-message.is-error { background: #fff1f1; color: #a04050; }
+.data-message a { color: inherit; text-decoration: underline; }
+.parking-lot:empty { min-height: 309px; }
+.price-box strong > #selected-rate { font-size: inherit; }
 
 main { max-width: 1500px; margin: 0 auto; padding: 28px 32px 24px; }
 h1 { margin: 0; font-size: 29px; line-height: 1.25; letter-spacing: -.03em; }
